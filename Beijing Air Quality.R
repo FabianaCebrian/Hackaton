@@ -4,6 +4,12 @@
 #Demonstração do comportamento dos poluentes particulados PM2.5 e PM10 
 
 install.packages("ggplot2")
+install.packages("dplyr") 
+install.packages("plyr")
+install.packages("readr")
+library(plyr)
+library(readr)
+library(dplyr)
 library(ggplot2)
 
 #exibir a pasta de trabalho atual
@@ -26,6 +32,11 @@ estacao10<-read.csv("Tiantan.csv", TRUE, ",")
 estacao11<-read.csv("Wanliu.csv", TRUE, ",")
 estacao12<-read.csv("Wanshouxigong.csv", TRUE, ",")
 
+pasta="/Users/fabiana.cebrian/Documents/Air Quality"
+estacoes12 = list.files(path=pasta, pattern="*.csv", full.names=TRUE) 
+testacoes12 = ldply(estacoes12, read_csv) 
+
+
 #####################################################################
 #Estação Aotizhongxin
 ########################################################################
@@ -45,11 +56,42 @@ length(estacao01$PM2.5)
 #retornar a lista de valores Únicos, retira os repetidos
 pm25v = unique(estacao01$PM2.5)
 pm25v
-  
+
 #extrair colunas específicas do data frame
-resultano <- data.frame(estacao01$day,estacao01$month,estacao01$year,estacao01$hour,estacao01$PM2.5)
+resultano <- data.frame(estacao01$day,estacao01$month,estacao01$year,estacao01$hour,estacao01$PM2.5,estacao01$TEMP)
 print(resultano)
 
+hist(estacao01$PM2.5)
+#PM2.5 na estação 01 possui mais valores entre 0 e 50
+#pela tabela até 55,4 de PM2.5 é considerado não saudável para pessoas sensíveis
+
+hist(estacao01$PM10)
+#PM10 na estação 01 possui mais valores entre 0 e 50
+#pela tabela até 54 de PM10 é considerado bom
+
+# Portanto nesta estação em grande parte dos anos 2013 até 2017, 
+# a qualidade do ar conforme o AQI ficou entre boa e moderada.
+
+hist(testacoes12$PM10)
+#o mesmo se observa ao agrupar todas as estações
+# PM2.5 possui mais valores entre 0 e 50
+
+hist(testacoes12$PM10)
+#PM10 possui mais valores entre 0 e 150
+#pela tabela até 154 de PM10 é considerado moderado
+
+poluentes <- data.frame(testacoes12$PM2.5,testacoes12$PM10)
+
+ggplot(poluentes, aes(x=testacoes12$PM2.5), color='blue')+
+  geom_histogram(fill='red', binwidth = 1)
+
+ggplot(testacoes12, aes(x=testacoes12$PM10), color='blue')+
+  geom_histogram(fill='red', binwidth = 1)
+
+#ver histograma de barras
+
+
+# separa os dados por ano da estação 01
 data.frame_por_ano <- split(estacao01,estacao01$year)
 head(data.frame_por_ano)
 
@@ -89,6 +131,80 @@ summary(ano2017est01)
 #Em 2017 o PM2.5 mínimo 3 ug/m^3 foi e o máximo foi 713 ug/m^3
 #Em 2017 o PM10 mínimo 3 ug/m^3 foi e o máximo foi 858 ug/m^3
 #Em 2017 a temperatura mínima foi -9.70 Celsius e o máxima foi 15.00 Celsius
+
+#################################################
+# separar por estações do ano
+# influência clima x poluentes na estação 01
+
+#PM2.5 menores nos primeiros meses
+# dez jan fevereiro inverno
+# março abril maio primavera
+# junho julho agosto verão
+# setembro a novembro outono
+
+data.frame_por_mes <- split(estacao01,estacao01$month)
+head(data.frame_por_mes)
+
+data.frame_por_pm25sg <- split(estacao01,estacao01$PM2.5<=55)
+#sensitivegroupe<-data.frame_por_pm25mod[["TRUE"]][["PM2.5"]]
+head(sensitivegroupe)
+data.frame_por_pm25mod <- split(estacao01,estacao01$PM2.5<=35)
+moderado<-data.frame_por_pm25mod[["TRUE"]][["PM2.5"]]
+head(moderado)
+
+#12141 registros menores que 35
+#16520 registros menores que 55
+
+#inverno todos os anos
+mes12est01<-(data.frame_por_mes$`12`)
+mes1est01<-(data.frame_por_mes$`1`)
+mes2est01<-(data.frame_por_mes$`2`)
+
+boxplot(mes12est01$PM2.5,mes1est01$PM2.5,mes2est01$PM2.5,
+        col="lightblue")
+
+#primavera todos os anos
+mes3est01<-(data.frame_por_mes$`3`)
+mes4est01<-(data.frame_por_mes$`4`) #menores discrepâncias
+mes5est01<-(data.frame_por_mes$`5`)
+head(mes5est01)
+
+boxplot(mes3est01$PM2.5,mes4est01$PM2.5,mes5est01$PM2.5,
+        col="lightblue")
+
+#verão todos os anos
+mes6est01<-(data.frame_por_mes$`6`)
+mes7est01<-(data.frame_por_mes$`7`) #menores discrepâncias
+mes8est01<-(data.frame_por_mes$`8`) #menores discrepâncias
+head(mes8est01)
+
+boxplot(mes6est01$PM2.5,mes7est01$PM2.5,mes8est01$PM2.5,
+                col="lightblue")
+
+#junho a setembro é chuvoso
+
+#outono todos os anos
+mes9est01<-(data.frame_por_mes$`9`) #menores discrepâncias
+mes10est01<-(data.frame_por_mes$`10`)
+mes11est01<-(data.frame_por_mes$`11`) #grandes discrepâncias
+head(mes8est01)
+
+boxplot(mes9est01$PM2.5,mes10est01$PM2.5,mes11est01$PM2.5,
+        col="lightblue")
+
+#chuva
+data.frame_por_chuva <-split(estacao01,estacao01$RAIN) 
+
+# Transformar vetor para data.frame
+dados2 <- data.frame(y = dados)
+
+chuva <- data.frame(y = estacao01$RAIN)
+chuva
+
+
+
+
+data.frame_por_temp <-split(estacao01,estacao01$TEMP) 
 
 ###################################################################
 #Estação Aotizhongxin - 2013 - PM2.5
@@ -176,6 +292,9 @@ cor(ano2013est01$TEMP,ano2013est01$RAIN)
 
 boxplot(ano2013est01$PM2.5,ano2013est01$PM10,
         col="lightblue")
+
+hist(ano2013est01$PM2.5,ano2013est01$PM10,
+     col="lightblue")
 
 ###################################################################
 #Estação Aotizhongxin - 2014 - PM2.5
