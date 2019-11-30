@@ -88,7 +88,7 @@ ggplot(poluentes, aes(x=testacoes12$PM2.5), color='blue')+
 ggplot(testacoes12, aes(x=testacoes12$PM10), color='blue')+
   geom_histogram(fill='red', binwidth = 1)
 
-#ver histograma de barras
+#histograma de barras
 
 
 # separa os dados por ano da estação 01
